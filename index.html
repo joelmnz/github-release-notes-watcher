@@ -12,6 +12,19 @@
         }
     </script>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.3.3/purify.min.js" defer></script>
+    <script defer>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            if (typeof marked !== 'undefined') {
+                marked.setOptions({
+                    breaks: true,
+                    gfm: true
+                });
+            }
+            init();
+        });
+    </script>
 </head>
 <body>
     <h1>GitHub Release Notes Watcher</h1>
@@ -39,7 +52,16 @@
         function init() {
             loadWatchedRepos();
             loadCache();
-            renderContent();
+            if (typeof DOMPurify !== 'undefined') {
+                renderContent();
+            } else {
+                const checkDOMPurify = setInterval(() => {
+                    if (typeof DOMPurify !== 'undefined') {
+                        clearInterval(checkDOMPurify);
+                        renderContent();
+                    }
+                }, 100);
+            }
         }
 
         function loadWatchedRepos() {
@@ -211,16 +233,6 @@
             alert('Cache cleared. Click "Check for Updates" to fetch fresh data.');
         }
 
-        // Initialize the app
-        init();
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.3.3/purify.min.js"></script>
-    <script>
-        marked.setOptions({
-            breaks: true,
-            gfm: true
-        });
     </script>
 </body>
 </html>
