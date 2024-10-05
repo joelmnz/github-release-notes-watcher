@@ -98,6 +98,40 @@
             padding: 0;
             background-color: transparent;
         }
+        .release-body h1, .release-body h2, .release-body h3, .release-body h4, .release-body h5, .release-body h6 {
+            margin-top: 24px;
+            margin-bottom: 16px;
+            font-weight: 600;
+            line-height: 1.25;
+        }
+        .release-body h1 { font-size: 2em; }
+        .release-body h2 { font-size: 1.5em; }
+        .release-body h3 { font-size: 1.25em; }
+        .release-body ul, .release-body ol {
+            padding-left: 2em;
+        }
+        .release-body li {
+            margin: 0.25em 0;
+        }
+        .release-body pre {
+            padding: 16px;
+            overflow: auto;
+            font-size: 85%;
+            line-height: 1.45;
+            background-color: #1e1e1e;
+            border-radius: 6px;
+        }
+        .release-body code {
+            padding: 0.2em 0.4em;
+            margin: 0;
+            font-size: 85%;
+            background-color: #1e1e1e;
+            border-radius: 6px;
+        }
+        .release-body pre code {
+            padding: 0;
+            background-color: transparent;
+        }
         .update-button, .settings-button { 
             background-color: #bb86fc; 
             color: #121212; 
@@ -263,12 +297,14 @@
                 const releaseDiv = document.createElement('div');
                 releaseDiv.className = 'release';
                 releaseDiv.id = `${release.repo}-${release.version}`;
+
                 let bodyHtml;
                 try {
-                    bodyHtml = marked(release.body);
+                    // Use DOMPurify to sanitize the HTML output from marked
+                    bodyHtml = DOMPurify.sanitize(marked.parse(release.body));
                 } catch (error) {
                     console.warn('Error parsing Markdown:', error);
-                    bodyHtml = release.body; // Fallback to plain text
+                    bodyHtml = DOMPurify.sanitize(release.body); // Fallback to sanitized plain text
                 }
 
                 releaseDiv.innerHTML = `
@@ -311,5 +347,12 @@
         init();
     </script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.3.3/purify.min.js"></script>
+    <script>
+        marked.setOptions({
+            breaks: true,
+            gfm: true
+        });
+    </script>
 </body>
 </html>
