@@ -109,18 +109,30 @@
 
         async function fetchReleaseNotes(repo) {
             const url = `https://api.github.com/repos/${repo}/releases/latest`;
-            const response = await fetch(url);
-            if (response.ok) {
-                const data = await response.json();
+            try {
+                const response = await fetch(url);
+                if (response.ok) {
+                    const data = await response.json();
+                    return {
+                        repo: repo,
+                        version: data.tag_name,
+                        body: marked(data.body),
+                        published_at: data.published_at,
+                        age_in_days: calculateAgeInDays(data.published_at)
+                    };
+                } else {
+                    const errorData = await response.json();
+                    return {
+                        repo: repo,
+                        error: `HTTP ${response.status}: ${errorData.message || 'Unknown error'}`
+                    };
+                }
+            } catch (error) {
                 return {
                     repo: repo,
-                    version: data.tag_name,
-                    body: marked(data.body), // Using marked.js to convert markdown to HTML
-                    published_at: data.published_at,
-                    age_in_days: calculateAgeInDays(data.published_at)
+                    error: `Network error: ${error.message}`
                 };
             }
-            return null;
         }
 
         function calculateAgeInDays(dateString) {
@@ -139,16 +151,11 @@
             const failedRepos = [];
 
             for (const repo of watchedRepos) {
-                try {
-                    const notes = await fetchReleaseNotes(repo);
-                    if (notes) {
-                        newReleaseNotes.push(notes);
-                    } else {
-                        failedRepos.push(repo);
-                    }
-                } catch (error) {
-                    console.error(`Error fetching release notes for ${repo}:`, error);
-                    failedRepos.push(repo);
+                const result = await fetchReleaseNotes(repo);
+                if (result.error) {
+                    failedRepos.push({ repo: result.repo, error: result.error });
+                } else {
+                    newReleaseNotes.push(result);
                 }
             }
 
@@ -166,8 +173,23 @@
             button.textContent = 'Check for Updates';
 
             if (failedRepos.length > 0) {
-                alert(`Failed to update the following repositories:\n${failedRepos.join('\n')}`);
+                showErrorDialog(failedRepos);
             }
+        }
+
+        function showErrorDialog(failedRepos) {
+            let message = "Failed to update the following repositories:\n\n";
+            failedRepos.forEach(({ repo, error }) => {
+                message += `${repo}: ${error}\n`;
+            });
+            message += "\nPossible solutions:\n";
+            message += "1. Check if the repository names are correct.\n";
+            message += "2. Ensure you have an active internet connection.\n";
+            message += "3. The repository might not have any releases yet.\n";
+            message += "4. There might be a temporary issue with GitHub's API.\n";
+            message += "5. If the error persists, try again later or remove the problematic repository.";
+            
+            alert(message);
         }
 
         function renderContent() {
