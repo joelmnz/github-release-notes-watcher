@@ -120,6 +120,7 @@
         <textarea id="repos-list" rows="10" cols="50"></textarea>
         <br>
         <button onclick="saveSettings()">Save</button>
+        <button onclick="cancelSettings()">Cancel</button>
     </div>
     <script>
         let watchedRepos = [];
@@ -272,6 +273,11 @@
             document.getElementById('settings').style.display = 'none';
             document.getElementById('content').style.display = 'block';
             handleUpdate();
+        }
+
+        function cancelSettings() {
+            document.getElementById('settings').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
         }
 
         // Initialize the app
