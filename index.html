@@ -116,7 +116,7 @@
                     return {
                         repo: repo,
                         version: data.tag_name,
-                        body: marked(data.body),
+                        body: typeof marked === 'function' ? marked(data.body) : data.body,
                         published_at: data.published_at,
                         age_in_days: calculateAgeInDays(data.published_at)
                     };
