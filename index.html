@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Release Notes Watcher</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            line-height: 1.6; 
+            padding: 20px; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background-color: #121212; 
+            color: #e0e0e0; 
+        }
+        .loading {
+            background-color: #3700b3;
+            color: #ffffff;
+            cursor: not-allowed;
+        }
+        .loading::after {
+            content: '...';
+            animation: ellipsis 1.25s infinite;
+        }
+        @keyframes ellipsis {
+            0% { content: '...'; }
+            33% { content: ''; }
+            66% { content: '.'; }
+            100% { content: '..'; }
+        }
+        h1 { color: #ffffff; }
+        h2 { color: #bb86fc; }
+        ul.toc {
+            list-style-type: none;
+            padding: 0;
+        }
+        ul.toc li {
+            margin: 5px 0;
+        }
+        ul.toc li a {
+            color: #bb86fc;
+            text-decoration: none;
+        }
+        ul.toc li a:hover {
+            text-decoration: underline;
+        }
+        .release {
+            margin-bottom: 30px; 
+            border-bottom: 1px solid #333; 
+            padding-bottom: 20px; 
+        }
+        .date { 
+            color: #9e9e9e; 
+            font-size: 0.9em; 
+        }
+        .update-button, .settings-button { 
+            background-color: #bb86fc; 
+            color: #121212; 
+            padding: 10px 20px; 
+            border: none; 
+            cursor: pointer; 
+            margin-right: 10px;
+        }
+        .update-button:hover, .settings-button:hover { 
+            background-color: #3700b3; 
+        }
+    </style>
+</head>
+<body>
+    <h1>GitHub Release Notes Watcher</h1>
+    <div id="loading-message">Loading...</div>
+    <div id="content" style="display: none;">
+        <p>Last updated: <span id="last-updated"></span></p>
+        <button onclick="handleUpdate()" class="update-button">Check for Updates</button>
+        <button onclick="showSettings()" class="settings-button">Settings</button>
+        <h2>Table of Contents</h2>
+        <ul id="toc" class="toc"></ul>
+        <div id="releases"></div>
+    </div>
+    <div id="settings" style="display: none;">
+        <h2>Settings</h2>
+        <textarea id="repos-list" rows="10" cols="50"></textarea>
+        <br>
+        <button onclick="saveSettings()">Save</button>
+    </div>
+    <script>
+        let watchedRepos = [];
+        let cachedData = {};
+
+        function init() {
+            loadWatchedRepos();
+            loadCache();
+            renderContent();
+        }
+
+        function loadWatchedRepos() {
+            const repos = localStorage.getItem('watchedRepos');
+            watchedRepos = repos ? repos.split('\n').filter(repo => repo.trim() !== '') : [];
+        }
+
+        function loadCache() {
+            cachedData = JSON.parse(localStorage.getItem('releaseNotesCache') || '{}');
+        }
+
+        function saveCache() {
+            localStorage.setItem('releaseNotesCache', JSON.stringify(cachedData));
+        }
+
+        async function fetchReleaseNotes(repo) {
+            const url = `https://api.github.com/repos/${repo}/releases/latest`;
+            const response = await fetch(url);
+            if (response.ok) {
+                const data = await response.json();
+                return {
+                    repo: repo,
+                    version: data.tag_name,
+                    body: marked(data.body), // Using marked.js to convert markdown to HTML
+                    published_at: data.published_at,
+                    age_in_days: calculateAgeInDays(data.published_at)
+                };
+            }
+            return null;
+        }
+
+        function calculateAgeInDays(dateString) {
+            const publishedDate = new Date(dateString);
+            const now = new Date();
+            return Math.floor((now - publishedDate) / (1000 * 60 * 60 * 24));
+        }
+
+        async function handleUpdate() {
+            const button = document.querySelector('.update-button');
+            button.classList.add('loading');
+            button.disabled = true;
+            button.textContent = 'Updating';
+
+            const newReleaseNotes = [];
+            const failedRepos = [];
+
+            for (const repo of watchedRepos) {
+                try {
+                    const notes = await fetchReleaseNotes(repo);
+                    if (notes) {
+                        newReleaseNotes.push(notes);
+                    } else {
+                        failedRepos.push(repo);
+                    }
+                } catch (error) {
+                    console.error(`Error fetching release notes for ${repo}:`, error);
+                    failedRepos.push(repo);
+                }
+            }
+
+            cachedData = {
+                last_updated: new Date().toISOString(),
+                release_notes: newReleaseNotes.sort((a, b) => new Date(b.published_at) - new Date(a.published_at)),
+                failed_repos: failedRepos
+            };
+
+            saveCache();
+            renderContent();
+
+            button.classList.remove('loading');
+            button.disabled = false;
+            button.textContent = 'Check for Updates';
+
+            if (failedRepos.length > 0) {
+                alert(`Failed to update the following repositories:\n${failedRepos.join('\n')}`);
+            }
+        }
+
+        function renderContent() {
+            document.getElementById('loading-message').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+
+            const lastUpdated = cachedData.last_updated ? new Date(cachedData.last_updated).toLocaleString() : 'Never';
+            document.getElementById('last-updated').textContent = lastUpdated;
+
+            const toc = document.getElementById('toc');
+            const releases = document.getElementById('releases');
+            toc.innerHTML = '';
+            releases.innerHTML = '';
+
+            for (const release of cachedData.release_notes || []) {
+                const tocItem = document.createElement('li');
+                tocItem.innerHTML = `<a href="#${release.repo}-${release.version}" title="${release.published_at}">${release.age_in_days} days ago - ${release.repo} - ${release.version}</a>`;
+                toc.appendChild(tocItem);
+
+                const releaseDiv = document.createElement('div');
+                releaseDiv.className = 'release';
+                releaseDiv.id = `${release.repo}-${release.version}`;
+                releaseDiv.innerHTML = `
+                    <h2><a href="https://github.com/${release.repo}/releases/tag/${release.version}" target="_blank">${release.repo} - ${release.version}</a></h2>
+                    <p class="date">Published on: <span title="${release.published_at}">${release.age_in_days} days ago</span></p>
+                    <div>${release.body}</div>
+                `;
+                releases.appendChild(releaseDiv);
+            }
+        }
+
+        function showSettings() {
+            document.getElementById('content').style.display = 'none';
+            document.getElementById('settings').style.display = 'block';
+            document.getElementById('repos-list').value = watchedRepos.join('\n');
+        }
+
+        function saveSettings() {
+            const reposList = document.getElementById('repos-list').value;
+            watchedRepos = reposList.split('\n').filter(repo => repo.trim() !== '');
+            localStorage.setItem('watchedRepos', watchedRepos.join('\n'));
+            document.getElementById('settings').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+            handleUpdate();
+        }
+
+        // Initialize the app
+        init();
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</body>
+</html>
