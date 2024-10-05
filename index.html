@@ -111,6 +111,7 @@
         <p>Last updated: <span id="last-updated"></span></p>
         <button onclick="handleUpdate()" class="update-button">Check for Updates</button>
         <button onclick="showSettings()" class="settings-button">Settings</button>
+        <button onclick="clearCache()" class="clear-cache-button">Clear Cache</button>
         <h2>Table of Contents</h2>
         <ul id="toc" class="toc"></ul>
         <div id="releases"></div>
@@ -154,8 +155,7 @@
                     return {
                         repo: repo,
                         version: data.tag_name,
-                        bodyMarkdown: data.body,
-                        bodyHtml: typeof marked === 'function' ? marked(data.body) : data.body,
+                        body: data.body,
                         published_at: data.published_at,
                         age_in_days: calculateAgeInDays(data.published_at)
                     };
@@ -254,7 +254,7 @@
                 releaseDiv.innerHTML = `
                     <h2><a href="https://github.com/${release.repo}/releases/tag/${release.version}" target="_blank">${release.repo} - ${release.version}</a></h2>
                     <p class="date">Published on: <span title="${release.published_at}">${release.age_in_days} days ago</span></p>
-                    <div class="release-body">${release.bodyHtml}</div>
+                    <div class="release-body">${marked(release.body)}</div>
                 `;
                 releases.appendChild(releaseDiv);
             }
@@ -278,6 +278,13 @@
         function cancelSettings() {
             document.getElementById('settings').style.display = 'none';
             document.getElementById('content').style.display = 'block';
+        }
+
+        function clearCache() {
+            localStorage.removeItem('releaseNotesCache');
+            cachedData = {};
+            renderContent();
+            alert('Cache cleared. Click "Check for Updates" to fetch fresh data.');
         }
 
         // Initialize the app
