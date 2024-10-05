@@ -2,10 +2,19 @@ body {
     font-family: Arial, sans-serif; 
     line-height: 1.6; 
     padding: 20px; 
-    max-width: 800px; 
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
     margin: 0 auto; 
     background-color: #121212; 
     color: #e0e0e0; 
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 1em 0;
 }
 .loading {
     background-color: #3700b3;
@@ -49,6 +58,8 @@ ul.toc li a:hover {
 }
 .release-body {
     line-height: 1.6;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
 }
 .release-body h1, .release-body h2, .release-body h3, .release-body h4, .release-body h5, .release-body h6 {
     margin-top: 24px;
@@ -72,6 +83,8 @@ ul.toc li a:hover {
     line-height: 1.45;
     background-color: #1e1e1e;
     border-radius: 6px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
 }
 .release-body code {
     padding: 0.2em 0.4em;
@@ -83,6 +96,18 @@ ul.toc li a:hover {
 .release-body pre code {
     padding: 0;
     background-color: transparent;
+}
+
+@media screen and (max-width: 600px) {
+    body {
+        padding: 10px;
+    }
+    
+    .update-button, .settings-button, .clear-cache-button {
+        display: block;
+        width: 100%;
+        margin-bottom: 10px;
+    }
 }
 .update-button, .settings-button, .clear-cache-button {
     background-color: #bb86fc;
