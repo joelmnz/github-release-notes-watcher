@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GitHub Release Notes Watcher</title>
+    <script>
+        // Fallback if CDN fails
+        if (typeof marked === 'undefined') {
+            console.warn('Marked library not loaded. Falling back to plain text.');
+            window.marked = function(text) { return text; };
+        }
+    </script>
     <style>
         body { 
             font-family: Arial, sans-serif; 
@@ -186,33 +193,38 @@
             button.disabled = true;
             button.textContent = 'Updating';
 
-            const newReleaseNotes = [];
-            const failedRepos = [];
+            try {
+                const newReleaseNotes = [];
+                const failedRepos = [];
 
-            for (const repo of watchedRepos) {
-                const result = await fetchReleaseNotes(repo);
-                if (result.error) {
-                    failedRepos.push({ repo: result.repo, error: result.error });
-                } else {
-                    newReleaseNotes.push(result);
+                for (const repo of watchedRepos) {
+                    const result = await fetchReleaseNotes(repo);
+                    if (result.error) {
+                        failedRepos.push({ repo: result.repo, error: result.error });
+                    } else {
+                        newReleaseNotes.push(result);
+                    }
                 }
-            }
 
-            cachedData = {
-                last_updated: new Date().toISOString(),
-                release_notes: newReleaseNotes.sort((a, b) => new Date(b.published_at) - new Date(a.published_at)),
-                failed_repos: failedRepos
-            };
+                cachedData = {
+                    last_updated: new Date().toISOString(),
+                    release_notes: newReleaseNotes.sort((a, b) => new Date(b.published_at) - new Date(a.published_at)),
+                    failed_repos: failedRepos
+                };
 
-            saveCache();
-            renderContent();
+                saveCache();
+                renderContent();
 
-            button.classList.remove('loading');
-            button.disabled = false;
-            button.textContent = 'Check for Updates';
-
-            if (failedRepos.length > 0) {
-                showErrorDialog(failedRepos);
+                if (failedRepos.length > 0) {
+                    showErrorDialog(failedRepos);
+                }
+            } catch (error) {
+                console.error('Error during update:', error);
+                alert('An error occurred while updating. Please try again.');
+            } finally {
+                button.classList.remove('loading');
+                button.disabled = false;
+                button.textContent = 'Check for Updates';
             }
         }
 
@@ -251,10 +263,18 @@
                 const releaseDiv = document.createElement('div');
                 releaseDiv.className = 'release';
                 releaseDiv.id = `${release.repo}-${release.version}`;
+                let bodyHtml;
+                try {
+                    bodyHtml = marked(release.body);
+                } catch (error) {
+                    console.warn('Error parsing Markdown:', error);
+                    bodyHtml = release.body; // Fallback to plain text
+                }
+
                 releaseDiv.innerHTML = `
                     <h2><a href="https://github.com/${release.repo}/releases/tag/${release.version}" target="_blank">${release.repo} - ${release.version}</a></h2>
                     <p class="date">Published on: <span title="${release.published_at}">${release.age_in_days} days ago</span></p>
-                    <div class="release-body">${marked(release.body)}</div>
+                    <div class="release-body">${bodyHtml}</div>
                 `;
                 releases.appendChild(releaseDiv);
             }
