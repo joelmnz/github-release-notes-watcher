@@ -128,3 +128,31 @@ ul.toc li a:hover {
     background-color: #6e6e6e;
     cursor: not-allowed;
 }
+
+.settings-description, .settings-example {
+    margin-bottom: 10px;
+    color: #9e9e9e;
+}
+
+.settings-description code, .settings-example code {
+    background-color: #1e1e1e;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-family: monospace;
+    color: #bb86fc;
+}
+
+#repos-list {
+    width: 100%;
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 10px;
+    font-family: monospace;
+    resize: vertical;
+}
+
+#repos-list::placeholder {
+    color: #666;
+}

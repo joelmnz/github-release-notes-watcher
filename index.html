@@ -40,7 +40,9 @@
     </div>
     <div id="settings" style="display: none;">
         <h2>Settings</h2>
-        <textarea id="repos-list" rows="10" cols="50"></textarea>
+        <p class="settings-description">Enter GitHub repositories, one per line, in the format: <code>owner/repo</code></p>
+        <p class="settings-example">Example: <code>microsoft/vscode</code></p>
+        <textarea id="repos-list" rows="10" cols="50" placeholder="owner1/repo1&#10;owner2/repo2&#10;owner3/repo3"></textarea>
         <br>
         <button onclick="saveSettings()" class="settings-button">Save</button>
         <button onclick="cancelSettings()" class="settings-button">Cancel</button>
