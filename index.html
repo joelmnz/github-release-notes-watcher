@@ -25,15 +25,27 @@
             init();
         });
     </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 </head>
 <body>
-    <h1>GitHub Release Notes Watcher</h1>
+    <div class="header">
+        <a href="https://github.com/joelmnz/github-release-notes-watcher" class="github-icon" target="_blank" title="View on GitHub">
+            <i class="fab fa-github"></i>
+        </a>
+        <h1>GitHub Release Notes Watcher</h1>
+    </div>
     <div id="loading-message">Loading...</div>
     <div id="content" style="display: none;">
         <p>Last updated: <span id="last-updated"></span></p>
-        <button onclick="handleUpdate()" class="update-button">Check for Updates</button>
-        <button onclick="showSettings()" class="settings-button">Settings</button>
-        <button onclick="clearCache()" class="clear-cache-button">Clear Cache</button>
+        <button onclick="handleUpdate()" class="update-button">
+            <i class="fas fa-sync-alt"></i> Check for Updates
+        </button>
+        <button onclick="showSettings()" class="settings-button">
+            <i class="fas fa-cog"></i> Settings
+        </button>
+        <button onclick="clearCache()" class="clear-cache-button">
+            <i class="fas fa-trash-alt"></i> Clear Cache
+        </button>
         <h2>Table of Contents</h2>
         <ul id="toc" class="toc"></ul>
         <div id="releases"></div>
