@@ -113,6 +113,23 @@
             return Math.floor((now - publishedDate) / (1000 * 60 * 60 * 24));
         }
 
+        function calculateTimeDifference(dateString) {
+            const lastUpdatedDate = new Date(dateString);
+            const now = new Date();
+            const diffInMs = now - lastUpdatedDate;
+            const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+            const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+            const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+            if (diffInMinutes < 60) {
+                return `${diffInMinutes} minutes ago`;
+            } else if (diffInHours < 24) {
+                return `${diffInHours} hours ago`;
+            } else {
+                return `${diffInDays} days ago`;
+            }
+        }
+
         async function handleUpdate() {
             const button = document.querySelector('.update-button');
             button.classList.add('loading');
@@ -174,7 +191,8 @@
             document.getElementById('content').style.display = 'block';
 
             const lastUpdated = cachedData.last_updated ? new Date(cachedData.last_updated).toLocaleString() : 'Never';
-            document.getElementById('last-updated').textContent = lastUpdated;
+            const timeDifference = cachedData.last_updated ? calculateTimeDifference(cachedData.last_updated) : '';
+            document.getElementById('last-updated').textContent = `${lastUpdated} (${timeDifference})`;
 
             const toc = document.getElementById('toc');
             const releases = document.getElementById('releases');
