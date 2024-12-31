@@ -177,3 +177,14 @@ a:hover {
     text-decoration: underline;
     transform: scale(1.05); 
 }
+
+.github-icon {
+    font-size: 2em;
+    color: #ffffff;
+    padding: 10px;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+}
