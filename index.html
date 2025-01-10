@@ -52,9 +52,9 @@
     </div>
     <div id="settings" style="display: none;">
         <h2>Settings</h2>
-        <p class="settings-description">Enter GitHub repositories, one per line, in the format: <code>owner/repo</code></p>
-        <p class="settings-example">Example: <code>microsoft/vscode</code></p>
-        <textarea id="repos-list" rows="10" cols="50" placeholder="owner1/repo1&#10;owner2/repo2&#10;owner3/repo3"></textarea>
+        <p class="settings-description">Enter GitHub repositories, one per line, in the format: <code>owner/repo</code> or a full GitHub URL.</p>
+        <p class="settings-example">Example: <code>https://github.com/microsoft/vscode</code></p>
+        <textarea id="repos-list" rows="10" cols="50" placeholder="owner1/repo1&#10;https://github.com/owner2/repo2&#10;https://github.com/owner3/repo3"></textarea>
         <br>
         <button onclick="saveSettings()" class="settings-button">Save</button>
         <button onclick="cancelSettings()" class="settings-button">Cancel</button>
@@ -80,7 +80,10 @@
 
         function loadWatchedRepos() {
             const repos = localStorage.getItem('watchedRepos');
-            watchedRepos = repos ? repos.split('\n').filter(repo => repo.trim() !== '') : [];
+            watchedRepos = repos ? repos.split('\n').filter(repo => repo.trim() !== '').map(repo => {
+                const match = repo.match(/https:\/\/github\.com\/([^\/]+\/[^\/]+)/);
+                return match ? match[1] : repo;
+            }) : [];
         }
 
         function loadCache() {
@@ -246,7 +249,10 @@
 
         function saveSettings() {
             const reposList = document.getElementById('repos-list').value;
-            watchedRepos = reposList.split('\n').filter(repo => repo.trim() !== '');
+            watchedRepos = reposList.split('\n').filter(repo => repo.trim() !== '').map(repo => {
+                const match = repo.match(/https:\/\/github\.com\/([^\/]+\/[^\/]+)/);
+                return match ? match[1] : repo;
+            });
             localStorage.setItem('watchedRepos', watchedRepos.join('\n'));
             document.getElementById('settings').style.display = 'none';
             document.getElementById('content').style.display = 'block';
