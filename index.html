@@ -80,7 +80,10 @@
 
         function loadWatchedRepos() {
             const repos = localStorage.getItem('watchedRepos');
-            watchedRepos = repos ? repos.split('\n').filter(repo => repo.trim() !== '') : [];
+            watchedRepos = repos ? repos.split('\n').filter(repo => repo.trim() !== '').map(repo => {
+                const match = repo.match(/https:\/\/github\.com\/([^\/]+\/[^\/]+)/);
+                return match ? match[1] : repo;
+            }) : [];
         }
 
         function loadCache() {
