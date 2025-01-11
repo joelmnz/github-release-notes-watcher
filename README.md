@@ -18,17 +18,20 @@ The GitHub Release Notes Watcher is a web application that allows users to monit
 - Provides a fallback mechanism if the `marked` library fails to load.
 - Includes a responsive design with a dark theme.
 - Provides error handling and user feedback for failed repository updates.
+- Sync settings across browsers and devices using GitHub or Google accounts, or by entering a GitHub gist URL.
 
 ## Instructions
 
 1. Open the `index.html` file in a web browser.
 2. Enter the GitHub repositories you want to monitor in the settings interface, one per line, in the format: `owner/repo`.
-3. Click "Save" to save the list of repositories.
-4. The application will fetch and display the latest release notes for the specified repositories.
-5. Use the "Check for Updates" button to manually check for updates.
-6. Use the "Clear Cache" button to clear the cached release notes.
-7. The "Last updated" time will show the last time the release notes were fetched.
-
+3. Choose a storage option from the dropdown menu: Local Storage, GitHub, Google, or GitHub Gist.
+4. If you choose GitHub or Google, authenticate with your account to sync settings.
+5. If you choose GitHub Gist, enter the Gist URL to read/write settings from/to a central location.
+6. Click "Save" to save the list of repositories and the chosen storage option.
+7. The application will fetch and display the latest release notes for the specified repositories.
+8. Use the "Check for Updates" button to manually check for updates.
+9. Use the "Clear Cache" button to clear the cached release notes.
+10. The "Last updated" time will show the last time the release notes were fetched.
 
 ## Acknowledgments
 
