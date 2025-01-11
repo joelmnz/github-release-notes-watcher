@@ -14,6 +14,8 @@
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.3.3/purify.min.js" defer></script>
+    <script src="https://apis.google.com/js/api.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js" defer></script>
     <script defer>
         window.addEventListener('DOMContentLoaded', (event) => {
             if (typeof marked !== 'undefined') {
@@ -56,12 +58,23 @@
         <p class="settings-example">Example: <code>https://github.com/microsoft/vscode</code></p>
         <textarea id="repos-list" rows="10" cols="50" placeholder="owner1/repo1&#10;https://github.com/owner2/repo2&#10;https://github.com/owner3/repo3"></textarea>
         <br>
+        <label for="storage-option">Choose storage option:</label>
+        <select id="storage-option">
+            <option value="local">Local Storage</option>
+            <option value="github">GitHub</option>
+            <option value="google">Google</option>
+            <option value="gist">GitHub Gist</option>
+        </select>
+        <br>
         <button onclick="saveSettings()" class="settings-button">Save</button>
         <button onclick="cancelSettings()" class="settings-button">Cancel</button>
     </div>
     <script>
         let watchedRepos = [];
         let cachedData = {};
+        let storageOption = 'local';
+        let githubToken = '';
+        let googleToken = '';
 
         function init() {
             loadWatchedRepos();
@@ -245,6 +258,7 @@
             document.getElementById('content').style.display = 'none';
             document.getElementById('settings').style.display = 'block';
             document.getElementById('repos-list').value = watchedRepos.join('\n');
+            document.getElementById('storage-option').value = storageOption;
         }
 
         function saveSettings() {
@@ -254,6 +268,8 @@
                 return match ? match[1] : repo;
             });
             localStorage.setItem('watchedRepos', watchedRepos.join('\n'));
+            storageOption = document.getElementById('storage-option').value;
+            localStorage.setItem('storageOption', storageOption);
             document.getElementById('settings').style.display = 'none';
             document.getElementById('content').style.display = 'block';
             handleUpdate();
@@ -269,6 +285,109 @@
             cachedData = {};
             renderContent();
             alert('Cache cleared. Click "Check for Updates" to fetch fresh data.');
+        }
+
+        async function authenticateWithGitHub() {
+            const clientId = 'YOUR_GITHUB_CLIENT_ID';
+            const redirectUri = 'YOUR_REDIRECT_URI';
+            const authUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=repo`;
+
+            const authWindow = window.open(authUrl, '_blank', 'width=500,height=600');
+            const authInterval = setInterval(() => {
+                try {
+                    if (authWindow.location.href.startsWith(redirectUri)) {
+                        clearInterval(authInterval);
+                        const urlParams = new URLSearchParams(authWindow.location.search);
+                        const code = urlParams.get('code');
+                        authWindow.close();
+                        exchangeGitHubCodeForToken(code);
+                    }
+                } catch (error) {
+                    // Ignore cross-origin errors
+                }
+            }, 100);
+        }
+
+        async function exchangeGitHubCodeForToken(code) {
+            try {
+                const response = await axios.post('YOUR_BACKEND_ENDPOINT', { code });
+                githubToken = response.data.access_token;
+                localStorage.setItem('githubToken', githubToken);
+                alert('GitHub authentication successful!');
+            } catch (error) {
+                console.error('Error exchanging GitHub code for token:', error);
+                alert('GitHub authentication failed. Please try again.');
+            }
+        }
+
+        async function authenticateWithGoogle() {
+            gapi.load('auth2', () => {
+                const auth2 = gapi.auth2.init({
+                    client_id: 'YOUR_GOOGLE_CLIENT_ID',
+                    scope: 'https://www.googleapis.com/auth/drive.file'
+                });
+
+                auth2.signIn().then(googleUser => {
+                    googleToken = googleUser.getAuthResponse().access_token;
+                    localStorage.setItem('googleToken', googleToken);
+                    alert('Google authentication successful!');
+                }).catch(error => {
+                    console.error('Error during Google authentication:', error);
+                    alert('Google authentication failed. Please try again.');
+                });
+            });
+        }
+
+        async function saveSettingsToGitHubGist() {
+            const gistContent = {
+                description: 'GitHub Release Notes Watcher Settings',
+                public: false,
+                files: {
+                    'settings.json': {
+                        content: JSON.stringify({ watchedRepos, storageOption })
+                    }
+                }
+            };
+
+            try {
+                const response = await axios.post('https://api.github.com/gists', gistContent, {
+                    headers: {
+                        Authorization: `token ${githubToken}`
+                    }
+                });
+                const gistUrl = response.data.html_url;
+                localStorage.setItem('gistUrl', gistUrl);
+                alert('Settings saved to GitHub Gist!');
+            } catch (error) {
+                console.error('Error saving settings to GitHub Gist:', error);
+                alert('Failed to save settings to GitHub Gist. Please try again.');
+            }
+        }
+
+        async function loadSettingsFromGitHubGist() {
+            const gistUrl = localStorage.getItem('gistUrl');
+            if (!gistUrl) {
+                alert('No GitHub Gist URL found. Please save settings to a GitHub Gist first.');
+                return;
+            }
+
+            try {
+                const response = await axios.get(gistUrl, {
+                    headers: {
+                        Authorization: `token ${githubToken}`
+                    }
+                });
+                const gistContent = response.data.files['settings.json'].content;
+                const settings = JSON.parse(gistContent);
+                watchedRepos = settings.watchedRepos;
+                storageOption = settings.storageOption;
+                localStorage.setItem('watchedRepos', watchedRepos.join('\n'));
+                localStorage.setItem('storageOption', storageOption);
+                alert('Settings loaded from GitHub Gist!');
+            } catch (error) {
+                console.error('Error loading settings from GitHub Gist:', error);
+                alert('Failed to load settings from GitHub Gist. Please try again.');
+            }
         }
 
     </script>
