@@ -18,6 +18,9 @@ The GitHub Release Notes Watcher is a web application that allows users to monit
 - Provides a fallback mechanism if the `marked` library fails to load.
 - Includes a responsive design with a dark theme.
 - Provides error handling and user feedback for failed repository updates.
+- Functions as a Progressive Web App (PWA) and works offline.
+- Includes a `manifest.json` file to define the PWA settings.
+- Registers a service worker to handle caching and offline functionality.
 
 ## Instructions
 
@@ -28,7 +31,7 @@ The GitHub Release Notes Watcher is a web application that allows users to monit
 5. Use the "Check for Updates" button to manually check for updates.
 6. Use the "Clear Cache" button to clear the cached release notes.
 7. The "Last updated" time will show the last time the release notes were fetched.
-
+8. To use the app offline, add it to your home screen on mobile devices or install it as a PWA on desktop browsers.
 
 ## Acknowledgments
 
